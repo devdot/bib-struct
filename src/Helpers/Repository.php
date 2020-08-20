@@ -12,7 +12,7 @@ class Repository {
 
     public function __construct(string $name, bool $load = true) {
         $this->name = $name;
-        $this->path = realpath(self::$PACKAGE_DIR.'/'.self::$REPOSITORY_DIR).'/'.str_replace('.', '/', $name).'.php';
+        $this->path = self::buildPath($name);
         
         if($load)
             $this->load();
@@ -46,6 +46,14 @@ class Repository {
             return $default;
         }
 
+    }
+
+    private static function buildPath(string $name) {
+        return realpath(self::$PACKAGE_DIR.'/'.self::$REPOSITORY_DIR).'/'.str_replace('.', '/', $name).'.php';
+    }
+
+    public static function exists(string $name) {
+        return file_exists(self::buildPath($name));
     }
 
     public function getName() {
