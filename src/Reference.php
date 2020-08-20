@@ -7,9 +7,9 @@ class Reference {
     protected int $bookId;
     protected $chapter;
     protected $verse;
-    protected string $add;
+    protected $add;
 
-    public function __construct(Translation $translation, int $bookId, $chapter = null, $verse = null, string $add = null) {
+    public function __construct(Translation $translation, int $bookId, $chapter = null, $verse = null, $add = null) {
         $this->bookId = $bookId;
         $this->chapter = $chapter;
         $this->verse = $verse;
@@ -61,5 +61,81 @@ class Reference {
     public function setTranslation(Translation $translation) {
         $this->translation = $translation;
         return $this->translation;
+    }
+
+    public static function parseStr(string $str, Reference $inherit = null, Translation $translation = null) {
+        // get a translation from somewhere
+        if($translation == null) {
+            if($inherit) {
+                $translation = $inherit->getTranslation();
+            }
+            else {
+                $translation = Factory::translation();
+            }
+        }
+
+        // see if we can find the book
+        $str = trim($str);
+        $ex = explode(' ', $str, 3);
+        $book = null;
+        if(count($ex) > 1) {
+            // check if this is a 2 part book like 1 Cor
+            if(is_numeric($ex[0]) && !is_numeric($ex[1])) {
+                $book = $ex[0].' '.$ex[1];
+            }
+            elseif(!is_numeric(substr($ex[0], 0, 1))) {
+                $book = $ex[0];
+            }
+        }
+        else {
+            if(is_numeric(substr($str, 0, 1))) {
+                // starts with number, but no space, so lets inherit
+            }
+            else {
+                // just see if this is a book
+                $book = $str;
+            }
+        }
+
+        // check if book string was found, if not just get from inherit
+        if($book == null) {
+            if($inherit == null)
+                    throw new \Exception('Could not identify book for '.$str);
+
+            $bookId = $inherit->bookId;
+        }
+        else {
+            // validate book against list
+            $bookId = $translation->matchToId(trim($book));
+            
+            if($bookId == null)
+                throw new \Exception('Could not match book '.$book.' in '.$str);
+
+            $str = substr($str, strlen($book));
+        }
+
+        // find chapter and verse
+        $chapter = null;
+        $verse = null;
+        $add = null;
+            
+        // get the chapter/verse part
+        $chapter = (int) $str;
+        $ex = explode($chapter, $str, 2);
+        $str = count($ex) == 2 ? $ex[1] : $ex[0];
+
+        // see if there is a verse part
+        $pos = strpos($str, ':');
+        if($pos !== false) {
+            $str = substr($str, $pos + 1);
+            
+            $verse = (int) $str;
+            
+            $ex = explode($verse, $str, 2);
+            $str = count($ex) == 2 ? $ex[1] : $ex[0];
+        }
+        $add = trim($str);
+
+        return new Reference($translation, $bookId, $chapter, $verse, $add);
     }
 }
