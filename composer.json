@@ -1,5 +1,5 @@
 {
-    "name": "ThomasSchaller/BibStruct",
+    "name": "thomas-schaller/bib-struct",
     "type": "library",
     "description": "PHP Bible structure classes and methods for semantic usage of bible references and resources",
     "keywords": ["bible", "datastructure"],
