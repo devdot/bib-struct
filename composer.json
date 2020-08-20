@@ -1,0 +1,27 @@
+{
+    "name": "ThomasSchaller/BibStruct",
+    "type": "library",
+    "description": "PHP Bible structure classes and methods for semantic usage of bible references and resources",
+    "keywords": ["bible", "datastructure"],
+    "homepage": "https://thomasschaller.eu/packages/bibstruct",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Thomas Schaller",
+            "email": "dev@thomasschaller.eu",
+            "homepage": "http://thomasschaller.eu",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "ThomasSchaller\\BibStruct\\":"src/"
+        }
+    },
+    "require": {
+        "php": ">=7.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "9"
+    }
+}
