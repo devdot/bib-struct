@@ -63,6 +63,24 @@ final class FactoryTest extends TestCase {
         $this->assertSame($trans1, $trans3, 'Factory did not cache translation correctly');
     }
 
+    public function testCreateReferenceRange() {
+        $range = Factory::range(2, 5, 6);
+        $this->assertEquals(2, $range->getBookId());
+        $this->assertEquals(2, $range->getFrom()->getBookId());
+        $this->assertEquals(2, $range->getTo()->getBookId());
+        $this->assertEquals(Factory::translation()->getShort(), $range->trans());
+        $this->assertEquals(Factory::translation()->getShort(), $range->getTo()->trans());
+        $this->assertEquals(Factory::translation()->getShort(), $range->getFrom()->trans());
+        $this->assertEquals('5', $range->getFrom()->chapterVerse());
+        $this->assertEquals('6', $range->getTo()->chapterVerse());
+
+        // try inversed range
+        $range = Factory::range(20, 5, 1, 2, 15);
+        $this->assertEquals(20, $range->getBookId());
+        $this->assertEquals('1:15', $range->getFrom()->chapterVerse());
+        $this->assertEquals('5:2', $range->getTo()->chapterVerse());
+    }
+
     public function testTranslationLists() {
         Factory::lang('de');
         $trans = Factory::translation();

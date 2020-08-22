@@ -139,4 +139,14 @@ class Factory {
 
         return $ref;
     }
+
+    public static function range($book, $chapterFrom = null, $chapterTo = null, $verseFrom = null, $verseTo = null, $addFrom = '', $addTo = '') {
+        return self::getInstance()->createReferenceRange(Factory::translation(), $book, $chapterFrom, $chapterTo, $verseFrom, $verseTo, $addFrom, $addTo);
+    }
+
+    public function createReferenceRange(Translation $translation, $book, $chapterFrom = null, $chapterTo = null, $verseFrom = null, $verseTo = null, $addFrom = '', $addTo = '') {
+        $refFrom = $this->createReference($translation, $book, $chapterFrom, $verseFrom, $addFrom);
+        $refTo = $this->createReference($translation, $book, $chapterTo, $verseTo, $addTo);
+        return new ReferenceRange($refFrom, $refTo);
+    }
 }

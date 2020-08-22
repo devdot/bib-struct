@@ -162,4 +162,13 @@ class Reference {
 
         return new Reference($translation, $bookId, $chapter, $verse, $add);
     }
+
+    /**
+     * Convert this Reference to a ReferenceRange
+     * @param Reference $to Second Reference with the endpoint of the range, null by default
+     * @return RefernceRange the range with this Reference as starting point
+     */
+    public function toRange(Reference $to) {
+        return new ReferenceRange($this, $to);
+    }
 }
