@@ -25,7 +25,7 @@ class ReferenceRange extends Reference {
         // default values to from
         $this->translation = $this->from->translation;
         $this->bookId = $this->from->bookId;
-        $this->chapter = $this->from->chapter;
+        $this->chapter = $this->from->chapter ?? $this->to->chapter;
         $this->verse = $this->from->verse;
         $this->add = $this->from->add;
 
@@ -67,10 +67,43 @@ class ReferenceRange extends Reference {
         }
     }
 
-    public function toStr(bool $transShort = false, bool $long = false) {
-    }
-
     public function chapterVerse(bool $hideAdd = false) {
+        // the from part
+        $str = $this->from->chapter ?? '';
+        if($this->from->verse) {
+            $str .= ':'.$this->from->verse;
+        }
+        if(!$hideAdd) {
+            $str.= $this->from->add;
+        }
+
+        // now check if we even have to present a range
+        if($this->sortNumFrom == $this->sortNumTo) {
+            // special case
+            $str .= ($hideAdd == false && !empty($this->to->add)) ? '-'.$this->to->add : '';
+            return $str;
+        }
+
+        // add the to section
+        $str .= '-';
+        if($this->from->chapter != $this->to->chapter) {
+            $str .= $this->to->chapter;
+            if($this->to->verse) {
+                $str .= ':';
+            }
+        }
+        if($this->to->verse) {
+            $str .= $this->to->verse;
+        }
+        if(!$hideAdd) {
+            $str.= $this->to->add;
+        }
+
+        // make sure this is not badly formatted
+        if($str == '-')
+            $str = '';
+
+        return $str;
     }
 
     public static function parseStr(string $str, Reference $inherit = null, Translation $translation = null) {

@@ -87,4 +87,29 @@ final class ReferenceRangeTest extends TestCase {
         $this->assertFalse($range->compare(Factory::range(4, 2, 5, null, 1)));
         $this->assertFalse($range->compare($range));
     }
+
+    public function testToStr() {
+        $this->assertEquals('9:1-3', Factory::range(1, 9, 9, 1, 3)->chapterVerse());
+        $this->assertEquals('9:1-10:3', Factory::range(1, 9, 10, 1, 3)->chapterVerse());
+        $this->assertEquals('9-10', Factory::range(1, 9, 10)->chapterVerse());
+        $this->assertEquals('9-10:1', Factory::range(1, 9, 10, null, 1)->chapterVerse());
+        $this->assertEquals('9:12-10', Factory::range(1, 9, 10, 12)->chapterVerse()); // this one is correct but semantically useless
+        $this->assertEquals('12:3a-4b', Factory::range(1, 12, 12, 3, 4, 'a', 'b')->chapterVerse());
+        $this->assertEquals('12:3a-b', Factory::range(1, 12, 12, 3, 3, 'a', 'b')->chapterVerse());
+        $this->assertEquals('12:3a-14:3b', Factory::range(1, 12, 14, 3, 3, 'a', 'b')->chapterVerse());
+        $this->assertEquals('a-b', Factory::range(1, null, null, null, null, 'a', 'b')->chapterVerse());
+        $this->assertEquals('', Factory::range(1, null, null, null, null)->chapterVerse());
+        $this->assertEquals('-b', Factory::range(1, null, null, null, null, '', 'b')->chapterVerse()); // not nice but expected
+
+        Factory::lang('en');
+        $this->assertEquals('Ex 8-9', Factory::range(2, 8, 9)->toStr());
+        $this->assertEquals('Exodus 8-9 EN-GEN', Factory::range(2, 8, 9)->toStr(true, true));
+        $this->assertEquals('Ex 8-9 EN-GEN', Factory::range(2, 8, 9)->toStr(true, false));
+        $this->assertEquals('Exodus 8-9', Factory::range(2, 8, 9)->toStr(false, true));
+        $this->assertEquals('Ex 8-9', Factory::range(2, 8, 9)->toStr(false, false));
+
+        $this->assertEquals('Gen 8:2b-9:3c', Factory::range(1, 8, 9, 2, 3, 'b', 'c')->toStr());
+        $this->assertEquals('Gen 8:2-9:3c', Factory::range(1, 8, 9, 2, 3, '', 'c')->toStr());
+        $this->assertEquals('Gen 10:2a-3', Factory::range(1, 10, 10, 2, 3, 'a')->toStr());
+    }
 }
