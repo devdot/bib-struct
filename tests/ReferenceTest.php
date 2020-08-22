@@ -48,4 +48,22 @@ final class ReferenceTest extends TestCase {
         $this->assertEquals('1 Cor', Reference::parseStr('1 Cor a')->toStr());
 
     }
+
+    public function testCompare() {
+        $ref = Factory::reference(40, 4, 30);
+        $this->assertTrue($ref->compare(Factory::reference(39)));
+        $this->assertTrue($ref->compare(Factory::reference(40)));
+        $this->assertFalse($ref->compare(Factory::reference(41)));
+
+        // for a Reference, no verse is beaten by a set verse
+        $this->assertTrue($ref->compare(Factory::reference(40, 4)));
+        $this->assertFalse($ref->compare($ref));
+        $this->assertTrue($ref->compare(Factory::reference(40, 3, 100)));
+        $this->assertTrue($ref->compare(Factory::reference(40, 4, 1)));
+        $this->assertTrue($ref->compare(Factory::reference(40, 4, 29)));
+        $this->assertFalse($ref->compare(Factory::reference(40, 4, 30)));
+        $this->assertFalse($ref->compare(Factory::reference(40, 4, 31)));
+        $this->assertFalse($ref->compare(Factory::reference(40, 5, 1)));
+        $this->assertFalse($ref->compare(Factory::reference(40, 5, 100)));
+    }
 }

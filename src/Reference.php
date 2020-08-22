@@ -9,12 +9,32 @@ class Reference {
     protected $verse;
     protected $add;
 
+    protected int $sortNum;
+
     public function __construct(Translation $translation, int $bookId, $chapter = null, $verse = null, $add = null) {
         $this->bookId = $bookId;
         $this->chapter = $chapter;
         $this->verse = $verse;
         $this->translation = $translation;
         $this->add = $add;
+        $this->calcSortNum();
+    }
+
+    private function calcSortNum() {
+        $this->sortNum = ($this->chapter ?? 0) * 1000 + ($this->verse ?? 0);
+    }
+
+    /**
+     * Compare this Reference to another Reference and return true if this is greater.
+     * Also compares book ID!
+     * @param Reference $b The other Reference
+     * @return bool True if this is greater, otherwise false
+     */
+    public function compare(Reference $b) {
+        if($this->bookId != $b->bookId) {
+            return $this->bookId > $b->bookId;
+        }
+        return $this->sortNum > $b->sortNum;
     }
 
     public function toStr(bool $transShort = false, bool $long = false) {
