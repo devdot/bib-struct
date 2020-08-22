@@ -49,6 +49,51 @@ final class ReferenceTest extends TestCase {
 
     }
 
+    public function testParseException() {
+        // $this->expectException(\ThomasSchaller\BibStruct\Exceptions\ParseException::class);
+
+        // first to the 'could not identify book' error
+        $strs = [
+            '8:1',
+            '',
+            '1T 8:1',
+            (string) rand(),
+        ];
+        foreach($strs as $str) {
+            try {
+                Reference::parseStr($str);
+                $this->assertEquals('should have failed on', $str);
+            }
+            catch(\ThomasSchaller\BibStruct\Exceptions\ParseException $e) {
+                $this->assertEquals('Could not identify book for '.$str, $e->getMessage());
+            }
+        }
+
+        // now the 'could not match' error
+        $strs = [
+            '_asdf',
+            'KK' => 'KK 8:1',
+            'NOBOOK' => 'NOBOOK 1:13a',
+            'test' => 'test 321',
+            '@dgadf',
+            '_df',
+            'T132:2',
+            'Mk12:1',
+            'Luke1',
+        ];
+        foreach($strs as $book => $str) {
+            if(is_numeric($book))
+                $book = $str;
+            try {
+                Reference::parseStr($str);
+                $this->assertEquals('should have failed on', $str);
+            }
+            catch(\ThomasSchaller\BibStruct\Exceptions\ParseException $e) {
+                $this->assertEquals('Could not match book '.$book.' in '.$str, $e->getMessage());
+            }
+        }
+    }
+
     public function testCompare() {
         $ref = Factory::reference(40, 4, 30);
         $this->assertTrue($ref->compare(Factory::reference(39)));
