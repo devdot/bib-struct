@@ -124,7 +124,7 @@ class Reference {
         // check if book string was found, if not just get from inherit
         if($book == null) {
             if($inherit == null)
-                    throw new \Exception('Could not identify book for '.$str);
+                    throw new Exceptions\ParseException('Could not identify book for '.$str);
 
             $bookId = $inherit->bookId;
         }
@@ -133,7 +133,7 @@ class Reference {
             $bookId = $translation->matchToId(trim($book));
             
             if($bookId == null)
-                throw new \Exception('Could not match book '.$book.' in '.$str);
+                throw new Exceptions\ParseException('Could not match book '.$book.' in '.$str);
 
             $str = substr($str, strlen($book));
         }
