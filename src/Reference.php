@@ -20,7 +20,7 @@ class Reference {
         $this->calcSortNum();
     }
 
-    private function calcSortNum() {
+    protected function calcSortNum() {
         $this->sortNum = ($this->chapter ?? 0) * 1000 + ($this->verse ?? 0);
     }
 
@@ -54,6 +54,10 @@ class Reference {
 
     public function book() {
         return $this->translation->bookShort($this->bookId);
+    }
+
+    public function getBookId() {
+        return $this->bookId;
     }
 
     public function bookLong() {
