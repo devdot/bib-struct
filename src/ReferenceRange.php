@@ -117,6 +117,11 @@ class ReferenceRange extends Reference {
             return null;
         }
 
+        // abort if there is not chapter to coalesce
+        if($this->chapter == null || $b->chapter == null) {
+            return null;
+        }
+
         // check sides
         if($this->sortNumFrom <= $b->sortNumFrom) {
             // this is left of b

@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use ThomasSchaller\BibStruct\Reference;
+use ThomasSchaller\BibStruct\ReferenceRange;
 use ThomasSchaller\BibStruct\Factory;
 
 final class ReferenceTest extends TestCase {
@@ -235,6 +236,20 @@ final class ReferenceTest extends TestCase {
         $this->assertNull($ref->coalesce(Factory::range(1, 1, 1)));
         $this->assertNull($ref->coalesce(Factory::range(1, 5, 6)));
         $this->assertNull($ref->coalesce(Factory::range(1)));
+
+        // now the book only
+        $ref = Factory::reference(42);
+        $this->assertNull($ref->coalesce($ref));
+        $this->assertNull($ref->coalesce(Factory::reference(43)));
+        $this->assertNull($ref->coalesce(Factory::reference(42, 1)));
+        $this->assertNull($ref->coalesce(Factory::reference(42, 1, 2)));
+        $this->assertNull($ref->coalesce(Factory::range(42)));
+        $this->assertNull($ref->coalesce(Factory::range(43)));
+        $this->assertNull($ref->coalesce(Factory::range(42, 1, 2)));
+        $this->assertNull($ref->coalesce(Factory::range(42, 1, 2, 3, 4)));
     }
 
+    public function testCoalesceGroup() {
+        
+    }
 }

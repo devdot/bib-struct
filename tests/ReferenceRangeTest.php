@@ -112,4 +112,141 @@ final class ReferenceRangeTest extends TestCase {
         $this->assertEquals('Gen 8:2-9:3c', Factory::range(1, 8, 9, 2, 3, '', 'c')->toStr());
         $this->assertEquals('Gen 10:2a-3', Factory::range(1, 10, 10, 2, 3, 'a')->toStr());
     }
+
+    public function testCoalesce() {
+        $range = Factory::range(22, 4, 6, 5, 15);
+
+        // single
+        $this->assertNotNull($range->coalesce(Factory::reference(22, 4, 10)));
+        $this->assertNotNull($range->coalesce(Factory::reference(22, 4, 4)));
+        $this->assertNotNull($range->coalesce(Factory::reference(22, 4, 5)));
+        $this->assertNotNull($range->coalesce(Factory::reference(22, 6, 15)));
+        $this->assertNotNull($range->coalesce(Factory::reference(22, 6, 16)));
+        $this->assertNotNull($range->coalesce(Factory::reference(22, 4)));
+        $this->assertNotNull($range->coalesce(Factory::reference(22, 5)));
+        $this->assertNotNull($range->coalesce(Factory::reference(22, 6)));
+        $this->assertEquals('4:5-6:15', $range->coalesce(Factory::reference(22, 4, 10))->chapterVerse());
+        $this->assertEquals('4:4-6:15', $range->coalesce(Factory::reference(22, 4, 4))->chapterVerse());
+        $this->assertEquals('4:5-6:15', $range->coalesce(Factory::reference(22, 4, 5))->chapterVerse());
+        $this->assertEquals('4:5-6:15', $range->coalesce(Factory::reference(22, 6, 15))->chapterVerse());
+        $this->assertEquals('4:5-6:16', $range->coalesce(Factory::reference(22, 6, 16))->chapterVerse());
+        $this->assertEquals('4-6:15', $range->coalesce(Factory::reference(22, 4))->chapterVerse()); // semantical weird but correct
+        $this->assertEquals('4:5-6:15', $range->coalesce(Factory::reference(22, 5))->chapterVerse());
+        $this->assertEquals('4:5-6', $range->coalesce(Factory::reference(22, 6))->chapterVerse()); // semantically weird but correct
+
+        $this->assertNull($range->coalesce(Factory::reference(21, 5, 2)));
+        $this->assertNull($range->coalesce(Factory::reference(23, 5, 2)));
+        $this->assertNull($range->coalesce(Factory::reference(22, 3, 1)));
+        $this->assertNull($range->coalesce(Factory::reference(22, 4, 3)));
+        $this->assertNull($range->coalesce(Factory::reference(22, 6, 17)));
+        $this->assertNull($range->coalesce(Factory::reference(22)));
+
+        // single full chapter
+        $range = Factory::range(11, 5, 7);
+        $this->assertNotNull($range->coalesce(Factory::reference(11, 5, 1)));
+        $this->assertNotNull($range->coalesce(Factory::reference(11, 7, 10)));
+        $this->assertNotNull($range->coalesce(Factory::reference(11, 4)));
+        $this->assertNotNull($range->coalesce(Factory::reference(11, 5)));
+        $this->assertNotNull($range->coalesce(Factory::reference(11, 7)));
+        $this->assertNotNull($range->coalesce(Factory::reference(11, 8)));
+        $this->assertEquals('5-7', $range->coalesce(Factory::reference(11, 5, 1))->chapterVerse());
+        $this->assertEquals('5-7', $range->coalesce(Factory::reference(11, 7, 10))->chapterVerse());
+        $this->assertEquals('4-7', $range->coalesce(Factory::reference(11, 4))->chapterVerse());
+        $this->assertEquals('5-7', $range->coalesce(Factory::reference(11, 5))->chapterVerse());
+        $this->assertEquals('5-7', $range->coalesce(Factory::reference(11, 7))->chapterVerse());
+        $this->assertEquals('5-8', $range->coalesce(Factory::reference(11, 8))->chapterVerse());
+
+        $this->assertNull($range->coalesce(Factory::reference(11, 8, 1)));
+        $this->assertNull($range->coalesce(Factory::reference(11, 3)));
+        $this->assertNull($range->coalesce(Factory::reference(11, 9)));
+
+        // check class for range with from and to equal
+        $this->assertInstanceOf(ReferenceRange::class, Factory::range(11, 22, 22)->coalesce(Factory::range(11, 22, 22)));
+
+        // range on range
+        $range = Factory::range(1, 3, 4, 5, 6);
+        $this->assertNotNull($range->coalesce(Factory::range(1, 3, 4, 5, 6)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 3, 3, 5, 9)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 4, 4, 1, 6)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 3, 4, 9, 1)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 3, 4, 5, 7)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 3, 4, 4, 6)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 2, 4, 5, 6)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 3, 5, 5, 6)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 2, 4, 1, 9)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 1, 3, 1, 4)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 1, 3, 1, 5)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 4, 5, 6, 1)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 4, 5, 7, 1)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 3, 4)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 2, 3)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 4, 5)));
+        $this->assertNotNull($range->coalesce(Factory::range(1, 1, 6)));
+        $this->assertEquals('3:5-4:6', $range->coalesce(Factory::range(1, 3, 4, 5, 6))->chapterVerse());
+        $this->assertEquals('3:5-4:6', $range->coalesce(Factory::range(1, 3, 3, 5, 9))->chapterVerse());
+        $this->assertEquals('3:5-4:6', $range->coalesce(Factory::range(1, 4, 4, 1, 6))->chapterVerse());
+        $this->assertEquals('3:5-4:6', $range->coalesce(Factory::range(1, 3, 4, 9, 1))->chapterVerse());
+        $this->assertEquals('3:5-4:7', $range->coalesce(Factory::range(1, 3, 4, 5, 7))->chapterVerse());
+        $this->assertEquals('3:4-4:6', $range->coalesce(Factory::range(1, 3, 4, 4, 6))->chapterVerse());
+        $this->assertEquals('2:5-4:6', $range->coalesce(Factory::range(1, 2, 4, 5, 6))->chapterVerse());
+        $this->assertEquals('3:5-5:6', $range->coalesce(Factory::range(1, 3, 5, 5, 6))->chapterVerse());
+        $this->assertEquals('2:1-4:9', $range->coalesce(Factory::range(1, 2, 4, 1, 9))->chapterVerse());
+        $this->assertEquals('1:1-4:6', $range->coalesce(Factory::range(1, 1, 3, 1, 4))->chapterVerse());
+        $this->assertEquals('1:1-4:6', $range->coalesce(Factory::range(1, 1, 3, 1, 5))->chapterVerse());
+        $this->assertEquals('3:5-5:1', $range->coalesce(Factory::range(1, 4, 5, 6, 1))->chapterVerse());
+        $this->assertEquals('3:5-5:1', $range->coalesce(Factory::range(1, 4, 5, 7, 1))->chapterVerse());
+        $this->assertEquals('3-4', $range->coalesce(Factory::range(1, 3, 4))->chapterVerse());
+        $this->assertEquals('2-4:6', $range->coalesce(Factory::range(1, 2, 3))->chapterVerse()); // semantically weird but correct
+        $this->assertEquals('3:5-5', $range->coalesce(Factory::range(1, 4, 5))->chapterVerse()); // semantically weird but correct
+        $this->assertEquals('1-6', $range->coalesce(Factory::range(1, 1, 6))->chapterVerse());
+
+        $this->assertNull($range->coalesce(Factory::range(1, 1, 3, 1, 3)));
+        $this->assertNull($range->coalesce(Factory::range(1, 3, 3, 1, 3)));
+        $this->assertNull($range->coalesce(Factory::range(1, 4, 5, 8, 1)));
+        $this->assertNull($range->coalesce(Factory::range(1, 5, 5, 1, 2)));
+        $this->assertNull($range->coalesce(Factory::range(2, 3, 4, 5, 6)));
+        $this->assertNull($range->coalesce(Factory::range(2, 3, 4, 5, 6)));
+
+        $range = Factory::range(2, 4, 5);
+        $this->assertNotNull($range->coalesce(Factory::range(2, 4, 5)));
+        $this->assertNotNull($range->coalesce(Factory::range(2, 4, 6)));
+        $this->assertNotNull($range->coalesce(Factory::range(2, 3, 3)));
+        $this->assertNotNull($range->coalesce(Factory::range(2, 3, 5)));
+        $this->assertNotNull($range->coalesce(Factory::range(2, 3, 6)));
+        $this->assertNotNull($range->coalesce(Factory::range(2, 6, 6)));
+        $this->assertNotNull($range->coalesce(Factory::range(2, 1, 3)));
+        $this->assertNotNull($range->coalesce(Factory::range(2, 6, 7)));
+        $this->assertNotNull($range->coalesce(Factory::range(2, 4, 5, 1, 9)));
+        $this->assertNotNull($range->coalesce(Factory::range(2, 3, 5, 9, 9)));
+        $this->assertNotNull($range->coalesce(Factory::range(2, 4, 6, 9, 9)));
+        $this->assertNotNull($range->coalesce(Factory::range(2, 3, 6, 9, 9)));
+        $this->assertEquals('4-5', $range->coalesce(Factory::range(2, 4, 5))->chapterVerse());
+        $this->assertEquals('4-6', $range->coalesce(Factory::range(2, 4, 6))->chapterVerse());
+        $this->assertEquals('3-5', $range->coalesce(Factory::range(2, 3, 3))->chapterVerse());
+        $this->assertEquals('3-5', $range->coalesce(Factory::range(2, 3, 5))->chapterVerse());
+        $this->assertEquals('3-6', $range->coalesce(Factory::range(2, 3, 6))->chapterVerse());
+        $this->assertEquals('4-6', $range->coalesce(Factory::range(2, 6, 6))->chapterVerse());
+        $this->assertEquals('1-5', $range->coalesce(Factory::range(2, 1, 3))->chapterVerse());
+        $this->assertEquals('4-7', $range->coalesce(Factory::range(2, 6, 7))->chapterVerse());
+        $this->assertEquals('4-5', $range->coalesce(Factory::range(2, 4, 5, 1, 9))->chapterVerse());
+        $this->assertEquals('3:9-5', $range->coalesce(Factory::range(2, 3, 5, 9, 9))->chapterVerse()); // semantically strange but correct
+        $this->assertEquals('4-6:9', $range->coalesce(Factory::range(2, 4, 6, 9, 9))->chapterVerse()); // semantically strange but correct
+        $this->assertEquals('3:9-6:9', $range->coalesce(Factory::range(2, 3, 6, 9, 9))->chapterVerse());
+
+        $this->assertNull($range->coalesce(Factory::range(1, 4, 5)));
+        $this->assertNull($range->coalesce(Factory::range(1, 5, 5, 1, 3)));
+        $this->assertNull($range->coalesce(Factory::range(2, 1, 2)));
+        $this->assertNull($range->coalesce(Factory::range(2, 7, 8)));
+        $this->assertNull($range->coalesce(Factory::range(2)));
+
+        // last one
+        $range = Factory::range(12);
+        $this->assertNull($range->coalesce($range));
+        $this->assertNull($range->coalesce(Factory::range(12, 1, 2)));
+        $this->assertNull($range->coalesce(Factory::range(12, 1, 2, 3, 4)));
+        $this->assertNull($range->coalesce(Factory::reference(12)));
+        $this->assertNull($range->coalesce(Factory::reference(13)));
+        $this->assertNull($range->coalesce(Factory::reference(12, 1)));
+        $this->assertNull($range->coalesce(Factory::reference(12, 1, 2)));
+    }
 }
