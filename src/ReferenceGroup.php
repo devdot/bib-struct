@@ -55,5 +55,34 @@ class ReferenceGroup extends Reference {
     }
 
     public static function parseStr(string $str, Reference $inherit = null, Translation $translation = null) {
+    public function coalesce(Reference $b) {
+        if(!($b instanceof ReferenceGroup)) {
+            return $b->coalesce($this);
+        }
+
+        if($this->bookId != $b->bookId) {
+            return null;
+        }
+
+        // simply merge the groups into a new one and implode the list
+        $merged = array_merge($this->list->get(), $b->list->get());
+        $merged = array_filter($merged, function($el) {
+            return $el->chapter != null;
+        });
+        $this->setList(new ReferenceList($merged));
+
+        $this->cleanup();
+
+        return $this;
+    }
+
+    /**
+     * Clean up this group with this sorthand to list sort and implode
+     */
+    public function cleanup() {
+        // sort and implode the list
+        $this->list->sort();
+        $this->list->implode();
+        return $this;
     }
 }

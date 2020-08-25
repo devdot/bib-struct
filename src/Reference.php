@@ -191,8 +191,8 @@ class Reference {
         if($b instanceof ReferenceGroup) {
             // attempt to coalesce with any of the group items
             $merged = false;
-            foreach($b->getList() as $key => $ref) {
-                $ret = $this->coalesce($ref);
+            foreach($b->getList()->get() as $key => $ref) {
+                $ret = $ref->coalesce($this);
                 if($ret != null) {
                     $b->getList()->set($ret, $key);
                     $merged = true;

@@ -107,7 +107,7 @@ class ReferenceRange extends Reference {
     }
 
     public function coalesce(Reference $b) {
-        if(!($b instanceof ReferenceRange)) {
+        if(!($b instanceof ReferenceRange) && !($b instanceof ReferenceGroup)) {
             // for all that are not ourselves, invert
             return $b->coalesce($this);
         }
@@ -120,6 +120,25 @@ class ReferenceRange extends Reference {
         // abort if there is not chapter to coalesce
         if($this->chapter == null || $b->chapter == null) {
             return null;
+        }
+        // special case with group
+        if($b instanceof ReferenceGroup) {
+            // attempt to coalesce with any of the group items
+            $merged = false;
+            foreach($b->getList()->get() as $key => $ref) {
+                $ret = $ref->coalesce($this);
+                if($ret != null) {
+                    $b->getList()->set($ret, $key);
+                    $merged = true;
+                    break;
+                }
+            }
+            if(!$merged) {
+                // just append to the list
+                $b->getList()->push($this);
+            }
+            // this type will always merge as long as its the same book
+            return $b;
         }
 
         // check sides

@@ -67,6 +67,7 @@ class ReferenceList implements \Countable {
      * Transform this list into a sorted list
      * @param bool $asc Ascending if true, descending if false
      * @param bool $breakInnerGroups if true, inner groups will be broken and everything fully sorted
+     * @return ReferenceList this
      */
     public function sort(bool $asc = true, bool $breakInnerGroups = true) {
         if($breakInnerGroups) {
@@ -80,7 +81,38 @@ class ReferenceList implements \Countable {
     }
 
     /**
+     * Merge the References together as much as possible in their current ordered form
+     * @return ReferenceList this
+     */
+    public function implode() {
+        if($this->count() == null) {
+            return $this;
+        }
+
+        // fill a new array and step through the old
+        $arr = [];
+        $last = $this->get(0);
+        foreach($this->list as $next) {
+            $merge = $last->coalesce($next);
+            if($merge === null) {
+                $arr[] = $last;
+                $last = $next;
+            }
+            else {
+                $last = $merge;
+            }
+        }
+        $arr[] = $last;
+
+        // write the new array
+        $this->list = $arr;
+
+        return $this;
+    }
+
+    /**
      * Return a copy of this list
+     * @return ReferenceList copy
      */
     public function copy() {
         return new ReferenceList($this->list);
@@ -173,5 +205,18 @@ class ReferenceList implements \Countable {
         $str = implode('; ', $strs);
 
         return $str;
+    }
+
+    /**
+     * Beautify the list by using sort, implode, toGroup in sequence
+     * @param bool $toGroups True by default, set to false to return without grouping
+     * @return ReferenceList this
+     */
+    public function cleanup(bool $toGroups = true) {
+        $this->sort();
+        $this->implode();
+        if($toGroups)
+            $this->toGroups();
+        return $this;
     }
 }

@@ -249,7 +249,7 @@ final class ReferenceTest extends TestCase {
         $this->assertNull($ref->coalesce(Factory::range(42, 1, 2, 3, 4)));
     }
 
-    public function testCoalesceGroup() {
-        
-    }
+    // not needed as ReferenceGroupTest covers it all
+    // public function testCoalesceGroup() {
+    // }
 }
