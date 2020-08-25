@@ -78,4 +78,24 @@ final class ReferenceListTest extends TestCase {
         $this->assertEquals('13:5', $list->get(0)->chapterVerse());
         $this->assertEquals('1:2-3:4', $list->get(1)->chapterVerse());
     }
+
+    public function testCopy() {
+        $refA = Factory::reference('Mt', 1, 1);
+        $refB = Factory::reference('Gen', 3);
+        $list = new ReferenceList([$refA, $refB]);
+
+        $this->assertSame($refA, $list->get(0));
+        $this->assertSame($refB, $list->get(1));
+
+        $copy = $list->copy();
+        $this->assertNotSame($list, $copy);
+        $this->assertSame($list->get(0), $copy->get(0));
+        $this->assertSame($list->get(1), $copy->get(1));
+        $this->assertEquals(2, $list->count());
+        $this->assertEquals(2, $copy->count());
+        
+        $list->pop();
+        $this->assertEquals(1, $list->count());
+        $this->assertEquals(2, $copy->count());
+    }
 }

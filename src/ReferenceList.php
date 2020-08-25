@@ -63,4 +63,14 @@ class ReferenceList implements \Countable {
         $this->list = $list;
     }
 
+
+    /**
+     * Return a copy of this list
+     */
+    public function copy() {
+        return new ReferenceList($this->list);
+    }
+
+
+    }
 }
