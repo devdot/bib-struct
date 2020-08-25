@@ -199,5 +199,77 @@ final class ReferenceListTest extends TestCase {
         $this->assertEquals('Gen 32:2; Ex 4:1; Ex 12; Ex 45:1-3; Num 1; Num 2; Num 5; Num 10; Num 12-13', $list->toStr());
         $list->toGroups();
         $this->assertEquals('Gen 32:2; Ex 4:1; 12; 45:1-3; Num 1; 2; 5; 10; 12-13', $list->toStr());
+
+        // generate recursive list
+        $last = new ReferenceGroup(new ReferenceList([Factory::reference(1, 1, 3)]));
+        $group = $last;
+        for($i = 2; $i < 10; $i++) {
+            $g = new ReferenceGroup(new ReferenceList([Factory::reference(1, $i, 3)]));
+            $last->getList()->push($g);
+            $this->assertCount(2, $last->getList());
+            $last = $g;
+        }
+        $this->assertEquals('1:3; 2:3; 3:3; 4:3; 5:3; 6:3; 7:3; 8:3; 9:3', $group->chapterVerse());
+        $this->assertCount(2, $group->getList()); // because they are all stacked recursively
+        $save_list = $group->getList()->copy();
+        
+        $group->getList()->breakInnerGroups();
+        $this->assertEquals('1:3; 2:3; 3:3; 4:3; 5:3; 6:3; 7:3; 8:3; 9:3', $group->chapterVerse());
+        $this->assertCount(9, $group->getList());
+    }
+
+    public function testImplode() {
+        $list = new ReferenceList();
+        $list->push(Factory::reference('Joh', 15));
+        $list->push(Factory::range('Joh', 14, 16));
+        $list->push(Factory::reference('Mk', 3, 3));
+        $list->push(Factory::reference('Mk', 3, 4));
+        $list->push(Factory::reference('Mk', 3, 5));
+        $list->push(Factory::range('Mk', 3, 3, 5, 7));
+        $list->push(Factory::range('Mk', 3, 3, 8, 10));
+        $list->push(Factory::reference('Gen', 1, 28));
+        $list->push(Factory::reference('Mk', 3, 5));
+        $list->push(Factory::reference('Joh', 3, 16));
+
+        $this->assertEquals('Joh 15; Joh 14-16; Mk 3:3; Mk 3:4; Mk 3:5; Mk 3:5-7; Mk 3:8-10; Gen 1:28; Mk 3:5; Joh 3:16', $list->toStr());
+        $list->implode();
+        $this->assertEquals('Joh 14-16; Mk 3:3-10; Gen 1:28; Mk 3:5; Joh 3:16', $list->toStr());
+        $list->toGroups();
+        $this->assertCount(5, $list);
+        $list->push(Factory::reference('Joh', 15));
+        $this->assertCount(6, $list);
+        $this->assertEquals('Joh 14-16; Mk 3:3-10; Gen 1:28; Mk 3:5; Joh 3:16; Joh 15', $list->toStr());
+        $list->implode();
+        $this->assertCount(5, $list);
+        $this->assertEquals('Joh 14-16; Mk 3:3-10; Gen 1:28; Mk 3:5; Joh 3:16; 15', $list->toStr());
+        // finally cleanup just to check
+        $list->cleanup();
+        $this->assertCount(3, $list);
+        $this->assertEquals('Gen 1:28; Mk 3:3-10; Joh 3:16; 14-16', $list->toStr());
+
+    }
+
+    public function testSort() {
+        $list = new ReferenceList();
+        $list->push(Factory::reference('Joh', 15));
+        $list->push(Factory::range('Joh', 14, 16));
+        $list->push(Factory::reference('Mk', 3, 3));
+        $list->push(Factory::reference('Mk', 4, 3));
+        $list->push(Factory::reference('Gen', 1, 28));
+        $list->push(Factory::reference('Joh', 3, 16));
+        $list->push(Factory::range('Gen', 1, 11));
+        $list->push(Factory::range('Joh', 15, 15, 1, 6));
+        $list->push(Factory::reference('Joh', 15, 1));
+
+        $this->assertEquals('Joh 15; Joh 14-16; Mk 3:3; Mk 4:3; Gen 1:28; Joh 3:16; Gen 1-11; Joh 15:1-6; Joh 15:1', $list->toStr());
+        $list->sort();
+        $this->assertEquals('Gen 1-11; Gen 1:28; Mk 3:3; Mk 4:3; Joh 3:16; Joh 14-16; Joh 15; Joh 15:1-6; Joh 15:1', $list->toStr());
+        $list->sort(false);
+        $this->assertEquals('Joh 15:1-6; Joh 15:1; Joh 15; Joh 14-16; Joh 3:16; Mk 4:3; Mk 3:3; Gen 1:28; Gen 1-11', $list->toStr());
+        
+        $list->cleanup(false);
+        $this->assertEquals('Gen 1-11; Mk 3:3; Mk 4:3; Joh 3:16; Joh 14-16', $list->toStr());
+        $list->toGroups();
+        $this->assertEquals('Gen 1-11; Mk 3:3; 4:3; Joh 3:16; 14-16', $list->toStr());
     }
 }
