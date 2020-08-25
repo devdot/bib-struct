@@ -111,4 +111,130 @@ final class ReferenceTest extends TestCase {
         $this->assertFalse($ref->compare(Factory::reference(40, 5, 1)));
         $this->assertFalse($ref->compare(Factory::reference(40, 5, 100)));
     }
+
+    public function testCoalesceSingle() {
+        $ref = Factory::reference(30, 2, 3);
+
+        $this->assertNull($ref->coalesce(Factory::reference(29, 2, 3)));
+        $this->assertNull($ref->coalesce(Factory::reference(31, 2, 3)));
+        
+        // simple reference neighbors
+        $this->assertNull($ref->coalesce(Factory::reference(30, 2, 1)));
+        $this->assertNotNull($ref->coalesce(Factory::reference(30, 2, 2)));
+        $this->assertNotNull($ref->coalesce(Factory::reference(30, 2, 3)));
+        $this->assertSame($ref, $ref->coalesce(Factory::reference(30, 2, 3)));
+        $this->assertNotNull($ref->coalesce(Factory::reference(30, 2, 4)));
+        $this->assertEquals('2:2-3', $ref->coalesce(Factory::reference(30, 2, 2))->chapterVerse());
+        $this->assertEquals('2:3', $ref->coalesce(Factory::reference(30, 2, 3))->chapterVerse());
+        $this->assertEquals('2:3-4', $ref->coalesce(Factory::reference(30, 2, 4))->chapterVerse());
+        $this->assertNull($ref->coalesce(Factory::reference(30, 2, 5)));
+        // false neighbors
+        $this->assertNull($ref->coalesce(Factory::reference(30)));
+        $this->assertNull($ref->coalesce(Factory::reference(30, 1, 2)));
+        $this->assertNull($ref->coalesce(Factory::reference(30, 1, 3)));
+        $this->assertNull($ref->coalesce(Factory::reference(30, 1, 4)));
+        $this->assertNull($ref->coalesce(Factory::reference(30, 3, 2)));
+        $this->assertNull($ref->coalesce(Factory::reference(30, 3, 3)));
+        $this->assertNull($ref->coalesce(Factory::reference(30, 3, 4)));
+
+        // in-equal systems
+        $this->assertNull($ref->coalesce(Factory::reference(30, 1)));
+        $this->assertNotNull($ref->coalesce(Factory::reference(30, 2)));
+        $this->assertEquals('2', $ref->coalesce(Factory::reference(30, 2))->chapterVerse());
+        $this->assertNull($ref->coalesce(Factory::reference(30, 3)));
+
+        // new reference
+        $ref = Factory::reference(1, 5);
+        $this->assertNull($ref->coalesce(Factory::reference(1)));
+        $this->assertNull($ref->coalesce(Factory::reference(2, 4)));
+        $this->assertNull($ref->coalesce(Factory::reference(2, 5)));
+        $this->assertNull($ref->coalesce(Factory::reference(2, 6)));
+        $this->assertNull($ref->coalesce(Factory::reference(1, 3)));
+        $this->assertNull($ref->coalesce(Factory::reference(1, 7)));
+        $this->assertNull($ref->coalesce(Factory::reference(1, 55)));
+
+        $this->assertNotNull($ref->coalesce(Factory::reference(1, 4)));
+        $this->assertNotNull($ref->coalesce(Factory::reference(1, 6)));
+        $this->assertNotNull($ref->coalesce(Factory::reference(1, 5)));
+        $this->assertEquals('4-5', $ref->coalesce(Factory::reference(1, 4))->chapterVerse());
+        $this->assertEquals('5', $ref->coalesce(Factory::reference(1, 5))->chapterVerse());
+        $this->assertEquals('5-6', $ref->coalesce(Factory::reference(1, 6))->chapterVerse());
+        
+        // consume single verses
+        $this->assertNotNull($ref->coalesce(Factory::reference(1, 5, 1)));
+        $this->assertNotNull($ref->coalesce(Factory::reference(1, 5, 10)));
+        $this->assertEquals('5', $ref->coalesce(Factory::reference(1, 5, 1))->chapterVerse());
+        $this->assertEquals('5', $ref->coalesce(Factory::reference(1, 5, 10))->chapterVerse());
+
+        // edge case with chapter 1 and entire book
+        $this->assertNull(Factory::reference(1)->coalesce(Factory::reference(1, 1)));
+        $this->assertNull(Factory::reference(1, 1)->coalesce(Factory::reference(1)));
+    }
+
+    public function testCoalesceRange() {
+        $ref = Factory::reference(20, 4, 10);
+
+        // coalesces like they should be
+        $this->assertNotNull($ref->coalesce(Factory::range(20, 4, 4, 10, 11)));
+        $this->assertNotNull($ref->coalesce(Factory::range(20, 4, 4, 10, 12)));
+        $this->assertNotNull($ref->coalesce(Factory::range(20, 4, 4, 9, 11)));
+        $this->assertNotNull($ref->coalesce(Factory::range(20, 4, 4, 8, 10)));
+        $this->assertNotNull($ref->coalesce(Factory::range(20, 4, 5, 8, 1)));
+        $this->assertNotNull($ref->coalesce(Factory::range(20, 3, 4, 2, 12)));
+        $this->assertNotNull($ref->coalesce(Factory::range(20, 3, 4)));
+        $this->assertNotNull($ref->coalesce(Factory::range(20, 4, 5)));
+        $this->assertEquals('4:10-11', $ref->coalesce(Factory::range(20, 4, 4, 10, 11))->chapterVerse());
+        $this->assertEquals('4:10-12', $ref->coalesce(Factory::range(20, 4, 4, 10, 12))->chapterVerse());
+        $this->assertEquals('4:9-11', $ref->coalesce(Factory::range(20, 4, 4, 9, 11))->chapterVerse());
+        $this->assertEquals('4:8-10', $ref->coalesce(Factory::range(20, 4, 4, 8, 10))->chapterVerse());
+        $this->assertEquals('4:8-5:1', $ref->coalesce(Factory::range(20, 4, 5, 8, 1))->chapterVerse());
+        $this->assertEquals('3:2-4:12', $ref->coalesce(Factory::range(20, 3, 4, 2, 12))->chapterVerse());
+        $this->assertEquals('3-4', $ref->coalesce(Factory::range(20, 3, 4))->chapterVerse());
+        $this->assertEquals('4-5', $ref->coalesce(Factory::range(20, 4, 5))->chapterVerse());
+        // neighboring
+        $this->assertNotNull($ref->coalesce(Factory::range(20, 4, 4, 1, 9)));
+        $this->assertNotNull($ref->coalesce(Factory::range(20, 4, 4, 11, 26)));
+        $this->assertEquals('4:1-10', $ref->coalesce(Factory::range(20, 4, 4, 1, 9))->chapterVerse());
+        $this->assertEquals('4:10-26', $ref->coalesce(Factory::range(20, 4, 4, 11, 26))->chapterVerse());
+
+        // false friends
+        $this->assertNull($ref->coalesce(Factory::range(19, 3, 4)));
+        $this->assertNull($ref->coalesce(Factory::range(20, 5, 6)));
+        $this->assertNull($ref->coalesce(Factory::range(20, 2, 3)));
+        $this->assertNull($ref->coalesce(Factory::range(20, 4, 4, 1, 8)));
+        $this->assertNull($ref->coalesce(Factory::range(20, 4, 4, 12, 13)));
+        $this->assertNull($ref->coalesce(Factory::range(20, 5, 5, 9, 11)));
+        $this->assertNull($ref->coalesce(Factory::range(20)));
+
+        // on the edge
+        $this->assertNull(Factory::reference(1, 3, 1)->coalesce(Factory::range(1, 1, 2)));
+        
+        // now a chapter only reference
+        $ref = Factory::reference(1, 3);
+        $this->assertNotNull($ref->coalesce(Factory::range(1, 3, 4)));
+        $this->assertNotNull($ref->coalesce(Factory::range(1, 2, 3)));
+        $this->assertNotNull($ref->coalesce(Factory::range(1, 1, 5)));
+        $this->assertNotNull($ref->coalesce(Factory::range(1, 1, 2)));
+        $this->assertNotNull($ref->coalesce(Factory::range(1, 4, 5)));
+        $this->assertNotNull($ref->coalesce(Factory::range(1, 3, 3)));
+        $this->assertNotNull($ref->coalesce(Factory::range(1, 3, 3, 10, 20)));
+        $this->assertNotNull($ref->coalesce(Factory::range(1, 3, 4, 2, 3)));
+        $this->assertNotNull($ref->coalesce(Factory::range(1, 2, 3, 1, 4)));
+        $this->assertEquals('3-4', $ref->coalesce(Factory::range(1, 3, 4))->chapterVerse());
+        $this->assertEquals('2-3', $ref->coalesce(Factory::range(1, 2, 3))->chapterVerse());
+        $this->assertEquals('1-5', $ref->coalesce(Factory::range(1, 1, 5))->chapterVerse());
+        $this->assertEquals('1-3', $ref->coalesce(Factory::range(1, 1, 2))->chapterVerse());
+        $this->assertEquals('3-5', $ref->coalesce(Factory::range(1, 4, 5))->chapterVerse());
+        $this->assertNotInstanceOf(ReferenceRange::class, $ref->coalesce(Factory::range(1, 3, 3)));
+        $this->assertNotInstanceOf(ReferenceRange::class, $ref->coalesce(Factory::range(1, 3, 3, 10, 20)));
+        $this->assertEquals('3', $ref->coalesce(Factory::range(1, 3, 3))->chapterVerse());
+        $this->assertEquals('3', $ref->coalesce(Factory::range(1, 3, 3, 10, 21))->chapterVerse());
+        $this->assertEquals('3-4:3', $ref->coalesce(Factory::range(1, 3, 4, 2, 3))->chapterVerse()); // semantically wrong but correct
+        $this->assertEquals('2:1-3', $ref->coalesce(Factory::range(1, 2, 3, 1, 4))->chapterVerse()); // semantically wrong but correct
+
+        $this->assertNull($ref->coalesce(Factory::range(1, 1, 1)));
+        $this->assertNull($ref->coalesce(Factory::range(1, 5, 6)));
+        $this->assertNull($ref->coalesce(Factory::range(1)));
+    }
+
 }

@@ -106,6 +106,48 @@ class ReferenceRange extends Reference {
         return $str;
     }
 
+    public function coalesce(Reference $b) {
+        if(!($b instanceof ReferenceRange)) {
+            // for all that are not ourselves, invert
+            return $b->coalesce($this);
+        }
+
+        // we've got two ranges
+        if($this->bookId != $b->bookId) {
+            return null;
+        }
+
+        // check sides
+        if($this->sortNumFrom <= $b->sortNumFrom) {
+            // this is left of b
+            // check contain
+            if($this->sortNumTo >= $b->sortNumTo) {
+                return $this;
+            }
+            // check overlap
+            if($this->sortNumTo + 1 >= $b->sortNumFrom) {
+                return $this->from->toRange($b->to);
+            }
+        }
+        else {
+            // this is right of b
+            // check contain
+            if($this->sortNumTo <= $b->sortNumTo) {
+                return $b;
+            }
+            // check overlap
+            if($this->sortNumFrom - 1 <= $b->sortNumTo) {
+                return $b->from->toRange($this->to);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 
+     * @returns Reference
+     */
     public static function parseStr(string $str, Reference $inherit = null, Translation $translation = null) {
     }
 
@@ -115,5 +157,13 @@ class ReferenceRange extends Reference {
 
     public function getTo() {
         return $this->to;
+    }
+
+    public function getSimplified() {
+        // simple check
+        if($this->from->sortNum == $this->to->sortNum) {
+            return $this->from;
+        }
+        return $this;
     }
 }

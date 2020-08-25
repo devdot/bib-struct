@@ -171,4 +171,81 @@ class Reference {
     public function toRange(Reference $to) {
         return new ReferenceRange($this, $to);
     }
+
+    /**
+     * Attempt to coalesce (merge) the Reference with another Reference
+     * @param Refernce $b
+     * @return mixed Reference if successfully merged, else null
+     */
+    public function coalesce(Reference $b) {
+        // make sure books are the same
+        if($this->bookId != $b->bookId)
+            return null;
+
+        // abort if there is not chapter to coalesce
+        if($this->chapter == null || $b->chapter == null) {
+            return null;
+        }
+
+        // we have to take care of all kinds of subclasses here
+        if($b instanceof ReferenceGroup) {
+            // attempt to coalesce with any of the group items
+            $merged = false;
+            foreach($b->getList() as $key => $ref) {
+                $ret = $this->coalesce($ref);
+                if($ret != null) {
+                    $b->getList()->set($ret, $key);
+                    $merged = true;
+                    break;
+                }
+            }
+            if(!$merged) {
+                // just append to the list
+                $b->getList()->push($this);
+            }
+            // this type will always merge as long as its the same book
+            return $b;
+        }
+        if($b instanceof ReferenceRange) {
+            // for a range, just check if we are inbetween, but only if the verse is set
+            // this would be convered by the later option, but is much more straight forward
+            if($this->verse) {
+                if($this->sortNum >= $b->sortNumFrom && $this->sortNum <= $b->sortNumTo) {
+                    return $b->getSimplified();
+                }
+            }
+
+            // for all else, convert this into a range
+            $ret = $this->toRange($this)->coalesce($b);
+            // simplify again so that no range is returned if it is not necessary
+            return $ret == null ? null : $ret->getSimplified();
+        }
+        
+        // else it's a normal reference
+        if($this->sortNum == $b->sortNum) {
+            // they are the same
+            return $this;
+        }
+        
+        if($this->verse && $b->verse) {
+            if($this->sortNum == $b->sortNum - 1 || $this->sortNum == $b->sortNum + 1) {
+                // they are neighbors, create range
+                return $this->toRange($b);
+            }
+        }
+        elseif($this->verse == null && $b->verse == null) {
+            // both are chapter only, check if they are neighbors then
+            if($this->chapter == $b->chapter - 1 || $this->chapter == $b->chapter + 1) {
+                return $this->toRange($b);
+            }
+        }
+        else {
+            // one of them has no verse set, check if the chapters are the same
+            if($this->chapter == $b->chapter) {
+                return $this->verse == null ? $this : $b;
+            }
+        }
+
+        return null;
+    }
 }
