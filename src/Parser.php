@@ -188,8 +188,14 @@ class Parser {
             $this->lastBook = '';
         }
 
+        // load the translation before loading the book
+        $translation = $this->translation;
+        if(!empty($this->lastTranslation)) {
+            $translation = Factory::translation($this->lastTranslation);
+        }
+
         // make sure we have a book id
-        if($this->lastBookId == null && !empty($this->lastBook)) {
+        if(!empty($this->lastBook)) {
             $this->loadBookId();
         }
         // check if it's still empty
@@ -269,13 +275,13 @@ class Parser {
             else {
                 $this->state = self::$STATE_READ_FROM;
                 $this->pointer++;
-                return $this->loadBookId();
+                return true;
             }
         }
         elseif(is_numeric($char)) {
             $this->state = self::$STATE_READ_FROM;
             // don't increase pointer because we already have the first number here
-            return $this->loadBookId();
+            return true;
         }
         else {
             // keep copying and read
@@ -328,10 +334,18 @@ class Parser {
             return true;
         }
         else {
+            if(empty($this->lastFromChapter)) {
+                // no real from data has been read, this is probably part of a longer book title
+                $this->state = self::$STATE_READ_BOOK;
+                $this->lastBook .= ' ';
+                return true;
+            }
+            else {
             // it was non numeric and has no semantic value, it must be add
             $this->state = self::$STATE_READ_FROM_ADD;
             return true;
         }
+    }
     }
 
     private function processReadFromAdd(string $char) {

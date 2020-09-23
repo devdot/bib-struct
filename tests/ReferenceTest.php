@@ -46,7 +46,7 @@ final class ReferenceTest extends TestCase {
 
         // errors that get ignored
         $this->assertEquals('1 Cor 8', Reference::parseStr('1 Cor 8:')->toStr());
-        $this->assertEquals('1 Cor', Reference::parseStr('1 Cor a')->toStr());
+        // $this->assertEquals('1 Cor', Reference::parseStr('1 Cor a')->toStr()); not anymore
 
     }
 
