@@ -2,6 +2,7 @@
 use PHPUnit\Framework\TestCase;
 use ThomasSchaller\BibStruct\Factory;
 use ThomasSchaller\BibStruct\Helpers\Repository;
+use ThomasSchaller\BibStruct\ReferenceList;
 
 final class FactoryTest extends TestCase {
     public static int $BOOK_COUNT = 66;
@@ -145,6 +146,14 @@ final class FactoryTest extends TestCase {
             $this->assertEquals($id, $trans->matchToId($repo->get('books.short.'.$key)), 'translation '.$name.' could not match short '.$repo->get('books.short.'.$key).' to id '.$id);
             $this->assertEquals($id, $trans->matchToId($repo->get('books.long.'.$key)), 'translation '.$name.' could not match long '.$repo->get('books.long.'.$key).' to id '.$id);
         }
+    }
+
+    public function testParse() {
+        $list = Factory::parse('Joh 3:16; Lk 22:2; 23:1; 23:3-6b');
+
+        $this->assertInstanceOf(ReferenceList::class, $list);
+        $this->assertEquals('Joh 3:16; Lk 22:2; Lk 23:1; Lk 23:3-6b', $list->toStr());
+        $this->assertEquals('Joh 3:16; Lk 22:2; 23:1; 23:3-6b', $list->toGroups()->toStr());
     }
 
 }

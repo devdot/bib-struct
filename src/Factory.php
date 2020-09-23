@@ -149,4 +149,17 @@ class Factory {
         $refTo = $this->createReference($translation, $book, $chapterTo, $verseTo, $addTo);
         return new ReferenceRange($refFrom, $refTo);
     }
+
+    public static function parse(string $str) {
+        return self::getInstance()->parseStr($str);
+    }
+
+    /**
+     * User the Parser class to parse a given string into a ReferenceList
+     * @param string $str The string to parse for References.
+     * @return ReferenceList
+     */
+    public function parseStr(string $str) {
+        return Parser::parse($str, null, null, Parser::$MODE_ALL);
+    }
 }
