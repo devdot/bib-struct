@@ -58,9 +58,7 @@ class Parser {
 
     public function setInherit(Reference $inherit) {
         $this->lastBookId = $inherit->getBookId();
-        if($this->translation == null) {
-            $this->setTranslation($inherit->translation);
-        }
+        $this->setTranslation($inherit->getTranslation());
     }
 
     public function setTranslation(Translation $translation) {
@@ -102,6 +100,8 @@ class Parser {
         $this->resetLastCache();
 
         $this->finished = false;
+        $this->pointer = 0;
+        $this->list->set([]);
         while($this->finished == false) {
             // let the machine step forward
             $res = $this->step();
@@ -187,7 +187,7 @@ class Parser {
             $this->lastFromChapter = $this->lastBook;
             $this->lastBook = '';
         }
-
+        
         // load the translation before loading the book
         $translation = $this->translation;
         if(!empty($this->lastTranslation)) {
@@ -209,7 +209,8 @@ class Parser {
             $this->lastToChapter = '';
         }
         
-        $from = new Reference($this->translation, $this->lastBookId, (int) $this->lastFromChapter, (int) $this->lastFromVerse, trim($this->lastFromAdd));
+
+        $from = new Reference($translation, $this->lastBookId, (int) $this->lastFromChapter, (int) $this->lastFromVerse, trim($this->lastFromAdd));
         $ref = $from;
 
         // now check if we had anything to
@@ -219,7 +220,7 @@ class Parser {
             if(empty($this->lastToVerse) && !empty($this->lastFromVerse))
                 $this->lastToVerse = $this->lastFromVerse;
             
-            $to = new Reference($this->translation, $this->lastBookId, (int) $this->lastToChapter, (int) $this->lastToVerse, trim($this->lastToAdd));
+            $to = new Reference($translation, $this->lastBookId, (int) $this->lastToChapter, (int) $this->lastToVerse, trim($this->lastToAdd));
             $ref = new ReferenceRange($from, $to);
         }
 
@@ -341,11 +342,11 @@ class Parser {
                 return true;
             }
             else {
-            // it was non numeric and has no semantic value, it must be add
-            $this->state = self::$STATE_READ_FROM_ADD;
-            return true;
+                // it was non numeric and has no semantic value, it must be add
+                $this->state = self::$STATE_READ_FROM_ADD;
+                return true;
+            }
         }
-    }
     }
 
     private function processReadFromAdd(string $char) {
@@ -492,10 +493,6 @@ class Parser {
     }
 
     private function processReadToTrans(string $char) {
-        // clear if there is translation from the from part
-        if(!empty($this->lastTranslation))
-            $this->lastTranslation = '';
-
         if($char == ' ') {
             // just keep going until terminate or ;
             $this->pointer++;
@@ -545,7 +542,7 @@ class Parser {
      * @param int $mode The mode that is supposed to run, from the mode list
      * @return Reference The parsed Reference
      */
-    public static function parse(string $str, Reference $inherit = null, Translation $translation = null, int $mode = null) {
+    public static function parse(string $str, Reference $inherit = null, Translation $translation = null, int $mode = 0) {
         $parser = new Parser();
         $parser->setMode($mode);
         return $parser->run($str, $inherit, $translation);
