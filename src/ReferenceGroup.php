@@ -55,6 +55,9 @@ class ReferenceGroup extends Reference {
     }
 
     public static function parseStr(string $str, Reference $inherit = null, Translation $translation = null) {
+        return Parser::parse($str, $inherit, $translation, Parser::$MODE_GROUP);
+    }
+
     public function coalesce(Reference $b) {
         if(!($b instanceof ReferenceGroup)) {
             return $b->coalesce($this);

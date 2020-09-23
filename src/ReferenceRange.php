@@ -173,6 +173,7 @@ class ReferenceRange extends Reference {
      * @returns Reference
      */
     public static function parseStr(string $str, Reference $inherit = null, Translation $translation = null) {
+        return Parser::parse($str, $inherit, $translation, Parser::$MODE_RANGE);
     }
 
     public function getFrom() {

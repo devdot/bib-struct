@@ -192,4 +192,31 @@ final class ReferenceGroupTest extends TestCase {
         $this->assertEquals('1:9-12; 1:27-31; 3-6; 10:12; 12:2-13:11; 24:22-27:1; 50-51', $group->chapterVerse());
     }
 
+    public function testParse() {
+        // prepare a simple testing list
+        $list = new ReferenceList();
+        $list->push(Factory::reference(12, 1, 28));
+        $list->push(Factory::reference(12, 1, 29, 'b'));
+        $list->push(Factory::range(12, 1, 1, 9, 11));
+        $list->push(Factory::reference(12, 1, 11));
+        $list->push(Factory::reference(12, 3));
+        $list->push(Factory::reference(12, 10, 12));
+        $list->push(Factory::range(12, 3, 5));
+        $list->push(Factory::range(12, 12, 13, 3, 10, 'b', 'a'));
+        $group = new ReferenceGroup($list);
+        $this->assertCount(8, $group->getList());
+        $this->assertEquals('1:28; 1:29b; 1:9-11; 1:11; 3; 10:12; 3-5; 12:3b-13:10a', $group->chapterVerse());
+
+        $this->assertInstanceOf(ReferenceGroup::class, ReferenceGroup::parseStr($group->toStr()));
+        $this->assertEquals($group->toStr(), ReferenceGroup::parseStr($group->toStr())->toStr());
+        
+        $this->assertEquals('Mk 12; 17:1; 23:1-2b', ReferenceGroup::parseStr('Mk 12; 17:1; 23:1-2b')->toStr());
+        $this->assertEquals('Mk 12; 17:1; 5', ReferenceGroup::parseStr('Mk 12; 17:1; 5')->toStr());
+        $this->assertEquals('Mk 12; 17:1; 5; 1b', ReferenceGroup::parseStr('Mk 12; 17:1; 5; 1b')->toStr());
+        $this->assertEquals('Mk 12-13', ReferenceGroup::parseStr('Mk 12-13')->toStr());
+        $this->assertInstanceOf(ReferenceGroup::class, ReferenceGroup::parseStr('Mk 12-13'));
+        $this->assertEquals('Mk 12-13; 22', ReferenceGroup::parseStr('Mk 12-13; 22; Lk 1')->toStr());
+        $this->assertInstanceOf(ReferenceGroup::class, ReferenceGroup::parseStr('Mk 12-13; 22; Lk 1'));
+    }
+
 }

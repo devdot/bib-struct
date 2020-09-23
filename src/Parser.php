@@ -140,6 +140,7 @@ class Parser {
         // just make sure to jump states on ; (terminates the current reference)
         if($thisChar == ';') {
             $this->state = self::$STATE_FINISH_CURRENT;
+            $this->pointer++;
         }
 
         switch($this->state) {
@@ -181,6 +182,12 @@ class Parser {
     }
 
     private function finishCurrent() {
+        // check if the lastBook entry is purely numeric and if so, move that to chapter
+        if(is_numeric($this->lastBook) && empty($this->lastFromChapter)) {
+            $this->lastFromChapter = $this->lastBook;
+            $this->lastBook = '';
+        }
+
         // make sure we have a book id
         if($this->lastBookId == null && !empty($this->lastBook)) {
             $this->loadBookId();
@@ -213,6 +220,7 @@ class Parser {
         $this->list->push($ref);
 
         $this->resetLastCache();
+        $this->state = self::$STATE_READ_BOOK;
         return true;
     }
 
@@ -233,13 +241,17 @@ class Parser {
     }
 
     private function processReadBook(string $char) {
-        if(is_numeric($char)) {
+        if($char == ' ') {
+            // skip upfront space
+        }
+        elseif(is_numeric($char)) {
             $this->state = self::$STATE_READ_BOOK_NUM;
+            $this->lastBook .= $char;
         }
         else {
             $this->state = self::$STATE_READ_BOOK_NORMAL;
+            $this->lastBook .= $char;
         }
-        $this->lastBook .= $char;
         $this->pointer++;
 
         return true;
