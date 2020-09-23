@@ -249,4 +249,29 @@ final class ReferenceRangeTest extends TestCase {
         $this->assertNull($range->coalesce(Factory::reference(12, 1)));
         $this->assertNull($range->coalesce(Factory::reference(12, 1, 2)));
     }
+
+    public function testParse() {
+        // random generated verses
+        for($i = 0; $i < 50; $i++) {
+            $bookId = rand(0, 65);
+            $noVerse = rand(0, 4) == 0;
+            $from = Factory::reference($bookId, rand(1, 15), $noVerse ? null : rand(1, 30));
+            $to = Factory::reference($bookId, rand(2, 16), $noVerse ? null : rand(1, 30));
+            $range = new ReferenceRange($from, $to);
+
+            // now test it
+            $transShort = rand(0, 1) == 0;
+            $long = rand(0, 1) == 0;
+            try {
+                $parsed = ReferenceRange::parseStr($range->toStr($transShort, $long));
+                $this->assertEquals($range->toStr($transShort, $long), $parsed->toStr($transShort, $long), 'failed random test with short='.$transShort.' and long='.$long);
+            }
+            catch(\ThomasSchaller\BibStruct\Exceptions\ParseException $e) {
+                $this->assertNotNull($e, 'failed parsing at random test with short='.$transShort.' and long='.$long);
+            }
+
+            $this->assertInstanceOf(ReferenceRange::class, $parsed);
+            $this->assertNotSame($parsed, $range);
+        }
+    }
 }
