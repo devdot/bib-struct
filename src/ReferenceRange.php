@@ -100,8 +100,8 @@ class ReferenceRange extends Reference {
         }
 
         // make sure this is not badly formatted
-        if($str == '-')
-            $str = '';
+        if(substr($str, -1) == '-')
+            $str = substr($str, 0, -1);
 
         return $str;
     }
