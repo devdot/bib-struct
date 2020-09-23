@@ -37,12 +37,12 @@ final class ReferenceTest extends TestCase {
         $this->assertEquals('Lk 2a', Reference::parseStr('Lk 2a')->toStr());
         $this->assertEquals('Lk 3:1b', Reference::parseStr('Lk 3:1b')->toStr());
         $this->assertEquals('Lk 22:13c', Reference::parseStr('Lk 22:13c')->toStr());
-        $this->assertEquals('Lk 23:13c', Reference::parseStr('Lk 23 : 13 c')->toStr());
+        $this->assertEquals('Lk 23:13c', Reference::parseStr('Lk 23 : 13c')->toStr());
         
         // use inherent
         $this->assertEquals('Joh 3:16', Reference::parseStr('3:16', Factory::reference('Joh'))->toStr());
         $this->assertEquals('Joshua 3:16', Reference::parseStr('3:16', Factory::reference('Jos'))->toStr(false, true));
-        $this->assertEquals('Gen 3:15a', Reference::parseStr('3:15 a', Factory::reference('Gen'))->toStr());
+        $this->assertEquals('Gen 3:15a', Reference::parseStr(' 3:15a', Factory::reference('Gen'))->toStr());
 
         // errors that get ignored
         $this->assertEquals('1 Cor 8', Reference::parseStr('1 Cor 8:')->toStr());
@@ -66,7 +66,7 @@ final class ReferenceTest extends TestCase {
                 $this->assertEquals('should have failed on', $str);
             }
             catch(\ThomasSchaller\BibStruct\Exceptions\ParseException $e) {
-                $this->assertEquals('Could not identify book for '.$str, $e->getMessage());
+                $this->assertEquals('No book defined, string: '.$str, $e->getMessage());
             }
         }
 
@@ -78,9 +78,9 @@ final class ReferenceTest extends TestCase {
             'test' => 'test 321',
             '@dgadf',
             '_df',
-            'T132:2',
-            'Mk12:1',
-            'Luke1',
+            'T' => 'T132:2',
+            // 'Mk12:1', Parser will actually do these two now!
+            // 'Luke1',
         ];
         foreach($strs as $book => $str) {
             if(is_numeric($book))
@@ -90,7 +90,7 @@ final class ReferenceTest extends TestCase {
                 $this->assertEquals('should have failed on', $str);
             }
             catch(\ThomasSchaller\BibStruct\Exceptions\ParseException $e) {
-                $this->assertEquals('Could not match book '.$book.' in '.$str, $e->getMessage());
+                $this->assertEquals('Could not identify book for '.$book.', string: '.$str, $e->getMessage());
             }
         }
     }
